@@ -9,8 +9,12 @@ import Singlecart from "./pages/Singlecart.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import SingleProduct from "./pages/SingleProduct.jsx";
 import Profile from "./pages/Profile.jsx";
+import Cart from "./pages/Cart.jsx";
 import { store } from "./Config/redux/store/stgore.js";
 import { Provider } from "react-redux";
+import { Check } from "lucide-react";
+import Checkout from "./pages/Checkout.jsx";
+import OrderConfirmation from "./pages/OrderConfirmation.jsx";
 
 
 
@@ -47,6 +51,18 @@ const router = createBrowserRouter([
     {
       path: 'singlecart/:id',
       element: <Singlecart /> 
+    },
+    {
+      path: 'cart',
+      element: <Cart />
+    },
+    {
+      path: 'checkout',
+      element: <Checkout />
+    },
+    {
+      path: 'order-confirmation',
+      element: <OrderConfirmation />
     }
 
     
