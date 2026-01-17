@@ -1,0 +1,23 @@
+name: Dependency Check
+on: [push, pull_request]
+
+jobs:
+  depcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Run OWASP Dependency-Check
+        uses: dependency-check/azure-dependency-check@v1.1.0
+        with:
+          project: 'Evaluation_project'
+          scan: '.'
+          format: 'HTML'
+          out: 'reports'
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: Dependency-Report
+          path: reports/dependency-check-report.html
