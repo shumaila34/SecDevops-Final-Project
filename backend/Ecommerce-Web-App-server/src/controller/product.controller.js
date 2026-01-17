@@ -9,6 +9,9 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 // Helper: Sanitize strings
 const sanitizeString = (str) => String(str || "").trim();
 
+// Helper: Convert to ObjectId safely
+const toObjectId = (id) => new mongoose.Types.ObjectId(id);
+
 // 🟢 Add Product
 const addProduct = async (req, res) => {
   const {
@@ -31,7 +34,7 @@ const addProduct = async (req, res) => {
   }
 
   try {
-    const postUser = await User.findById(userId);
+    const postUser = await User.findById(toObjectId(userId));
     if (!postUser) return res.status(404).json({ message: "User not found." });
 
     if (!req.file) return res.status(400).json({ error: "Product image is required" });
@@ -43,7 +46,7 @@ const addProduct = async (req, res) => {
       description: sanitizeString(description),
       mobileNumber: sanitizeString(mobileNumber),
       postImage,
-      user: userId,
+      user: toObjectId(userId),
       price: Number(price),
       category: sanitizeString(category),
       location: sanitizeString(location)
@@ -67,7 +70,7 @@ const likeProduct = async (req, res) => {
   }
 
   try {
-    const product = await productModel.findById(productId);
+    const product = await productModel.findById(toObjectId(productId));
     if (!product) return res.status(404).json({ error: "Product not found" });
 
     const alreadyLiked = product.likes.includes(userId);
@@ -75,7 +78,7 @@ const likeProduct = async (req, res) => {
     if (alreadyLiked) {
       product.likes = product.likes.filter(id => id.toString() !== userId);
     } else {
-      product.likes.push(userId);
+      product.likes.push(toObjectId(userId));
     }
 
     await product.save();
@@ -103,13 +106,14 @@ const commentProduct = async (req, res) => {
   }
 
   try {
-    const product = await productModel.findById(productId);
+    const product = await productModel.findById(toObjectId(productId));
     if (!product) return res.status(404).json({ error: "Product not found" });
 
-    product.comments.push({ user: userId, text: sanitizeString(text) });
+    product.comments.push({ user: toObjectId(userId), text: sanitizeString(text) });
     await product.save();
 
-    const updatedProduct = await productModel.findById(productId).populate("comments.user", "userName email");
+    const updatedProduct = await productModel.findById(toObjectId(productId))
+      .populate("comments.user", "userName email");
 
     res.status(200).json({ message: "Comment added successfully", comments: updatedProduct.comments });
 
@@ -129,7 +133,7 @@ const deleteComment = async (req, res) => {
   }
 
   try {
-    const product = await productModel.findById(productId);
+    const product = await productModel.findById(toObjectId(productId));
     if (!product) return res.status(404).json({ error: "Product not found" });
 
     const comment = product.comments.id(commentId);
@@ -142,7 +146,8 @@ const deleteComment = async (req, res) => {
     product.comments.id(commentId).remove();
     await product.save();
 
-    const updatedProduct = await productModel.findById(productId).populate("comments.user", "userName email");
+    const updatedProduct = await productModel.findById(toObjectId(productId))
+      .populate("comments.user", "userName email");
 
     res.status(200).json({ message: "Comment deleted successfully", comments: updatedProduct.comments });
 
@@ -159,7 +164,8 @@ const getComments = async (req, res) => {
   if (!isValidObjectId(productId)) return res.status(400).json({ error: "Invalid Product ID" });
 
   try {
-    const product = await productModel.findById(productId).populate("comments.user", "userName email");
+    const product = await productModel.findById(toObjectId(productId))
+      .populate("comments.user", "userName email");
     if (!product) return res.status(404).json({ error: "Product not found" });
 
     res.status(200).json({ comments: product.comments });
@@ -176,7 +182,7 @@ const singleProduct = async (req, res) => {
   if (!isValidObjectId(id)) return res.status(400).json({ error: "Invalid Product ID" });
 
   try {
-    const product = await productModel.findById(id);
+    const product = await productModel.findById(toObjectId(id));
     if (!product) return res.status(404).json({ error: "Product not found" });
 
     res.status(200).json(product);
@@ -192,7 +198,8 @@ const publicSingleProduct = async (req, res) => {
   if (!isValidObjectId(id)) return res.status(400).json({ error: "Invalid Product ID" });
 
   try {
-    const product = await productModel.findById(id).populate("user", "name");
+    const product = await productModel.findById(toObjectId(id))
+      .populate("user", "name");
     if (!product) return res.status(404).json({ error: "No product found" });
 
     res.status(200).json({
@@ -219,7 +226,7 @@ const userProducts = async (req, res) => {
   if (!isValidObjectId(userId)) return res.status(400).json({ error: "Invalid User ID" });
 
   try {
-    const products = await productModel.find({ user: userId });
+    const products = await productModel.find({ user: toObjectId(userId) });
     if (products.length === 0) return res.status(200).json({ message: "No products posted by this user." });
 
     res.status(200).json({ message: "User products fetched successfully", data: products });
@@ -260,13 +267,13 @@ const deleteProduct = async (req, res) => {
   if (!isValidObjectId(id) || !isValidObjectId(userId)) return res.status(400).json({ error: "Invalid IDs" });
 
   try {
-    const post = await productModel.findById(id);
+    const post = await productModel.findById(toObjectId(id));
     if (!post) return res.status(404).json({ error: "Product not found" });
 
     if (post.user.toString() !== userId) return res.status(403).json({ error: "This is not your product" });
 
     await deleteImageFromCloudinary(post.postImage);
-    await productModel.findByIdAndDelete(id);
+    await productModel.findByIdAndDelete(toObjectId(id));
 
     res.json({ message: "Product successfully deleted" });
   } catch (error) {
@@ -283,7 +290,7 @@ const updateProduct = async (req, res) => {
 
     if (!isValidObjectId(productId) || !isValidObjectId(userId)) return res.status(400).json({ error: "Invalid IDs" });
 
-    const product = await productModel.findById(productId).populate("user");
+    const product = await productModel.findById(toObjectId(productId)).populate("user");
     if (!product) return res.status(404).json({ message: "Product not found!" });
 
     if (!product.user || !product.user._id) return res.status(400).json({ message: "Product user not found!" });
