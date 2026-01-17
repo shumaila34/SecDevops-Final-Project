@@ -1,0 +1,17 @@
+name: OWASP ZAP Automation
+on: [push] # Code push hote hi scan shuru ho jayega
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run ZAP Docker Scan
+        uses: zaproxy/action-full-scan@v0.12.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'https://github.com/shumaila34/SecDevops-Final-Project' # Apni app ka URL yahan bhi likhein
+          # Ye command hamari zap.yaml file ko run karegi
+          cmd_options: '-v zap.yaml'
