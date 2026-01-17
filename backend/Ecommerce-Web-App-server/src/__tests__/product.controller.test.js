@@ -1,5 +1,4 @@
-// instead of import
-const { addProduct, allProducts, deleteProduct } = require('../controller/product.controller.js');
+import { addProduct, allProducts, deleteProduct } from '../controller/product.controller.js';
 
 describe('Product Controller basic tests', () => {
   it('should have addProduct defined', () => {
