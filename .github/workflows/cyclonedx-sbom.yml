@@ -1,0 +1,31 @@
+name: CycloneDX SBOM Generation
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  generate-sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install CycloneDX CLI
+        run: npm install -g @cyclonedx/cyclonedx-npm
+
+      - name: Generate Frontend SBOM
+        run: |
+          cd frontend
+          cyclonedx-npm --output-format JSON --output-file ../frontend-bom.json
+
+      - name: Generate Backend SBOM
+        run: |
+          cd backend/Ecommerce-Web-App-server
+          cyclonedx-npm --output-format JSON --output-file ../../backend-bom.json
+
+      - name: Upload SBOM Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MERN-SBOMs
+          path: "*.json"
