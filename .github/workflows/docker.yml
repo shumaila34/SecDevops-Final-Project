@@ -40,3 +40,6 @@ jobs:
       - name: Push frontend image
         run: |
           docker push shumylaa/evaluation_project-frontend:latest
+       # docker.yml ke end mein ye add kar sakte hain test karne ke liye
+      - name: Test with Docker Compose
+        run: docker-compose up -d
