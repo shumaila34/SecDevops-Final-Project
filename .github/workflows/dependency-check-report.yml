@@ -1,0 +1,31 @@
+name: Dependency Check MERN
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  scan-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # MERN stack mein node_modules scan hote hain
+      - name: OWASP Dependency-Check
+        uses: owasp/dependency-check-action@main
+        with:
+          project: 'MERN-Ecommerce-App'
+          path: '.' # Ye poore project (frontend + backend) ko scan karega
+          format: 'HTML'
+          out: 'reports'
+          args: >
+            --enableRetired
+            --scan "**/package.json"
+            --exclude "**/node_modules/**"
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: MERN-Security-Report
+          path: reports
