@@ -11,22 +11,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout your code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2️⃣ Start ZAP scan in Docker
       - name: Run ZAP Full Scan
-        uses: zaproxy/action-full-scan@v0.12.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          target: 'http://host.docker.internal:5173'  # Local Vite app
-          cmd_options: '-c zap.yaml -r zap_report.html'
+        run: |
+          docker run -v ${{ github.workspace }}:/zap/wrk/:rw -t owasp/zap2docker-stable \
+          zap-full-scan.py -t http://host.docker.internal:5173 \
+          -c zap.yaml -r /zap/wrk/zap_report.html
 
-      # 3️⃣ Upload the ZAP report as artifact
       - name: Upload ZAP Report
-     uses: actions/upload-artifact@v4
-     with:
-       name: ZAP-Report
-       path: zap_report.html
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZAP-Report
+          path: zap_report.html
+
 
