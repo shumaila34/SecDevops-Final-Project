@@ -25,7 +25,8 @@ jobs:
 
       # 3️⃣ Upload the ZAP report as artifact
       - name: Upload ZAP Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: ZAP-Report
-          path: zap_report.html
+     uses: actions/upload-artifact@v4
+     with:
+       name: ZAP-Report
+       path: zap_report.html
+
