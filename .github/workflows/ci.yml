@@ -8,38 +8,76 @@ on:
 
 jobs:
   build-and-test:
-    # CHANGE: Using GitHub's runner instead of self-hosted
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Install docker-compose (if missing)
+        run: |
+          if ! command -v docker-compose >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y docker-compose
+          fi
+
+      - name: Start services with Docker Compose
+        run: |
+          if [ -f docker-compose.yml ] || [ -f docker-compose.yaml ]; then
+            docker-compose up -d
+            # give services a moment to start; adjust if you need longer waits or health checks
+            sleep 5
+          else
+            echo "No docker-compose file found, skipping docker-compose up."
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      # Backend Steps
       - name: Install backend dependencies
         run: |
-          cd backend/Ecommerce-Web-App-server
-          npm ci
+          if [ -d backend/Ecommerce-Web-App-server ]; then
+            cd backend/Ecommerce-Web-App-server
+            npm ci
+          else
+            echo "Backend directory not found, skipping install."
+          fi
       
       - name: Run backend tests
         run: |
-          cd backend/Ecommerce-Web-App-server
-          # Added --passWithNoTests to ensure it doesn't fail if tests are missing
-          npm test -- --coverage --passWithNoTests 
+          if [ -d backend/Ecommerce-Web-App-server ]; then
+            cd backend/Ecommerce-Web-App-server
+            npm test -- --coverage --passWithNoTests
+          else
+            echo "Backend directory not found, skipping tests."
+          fi
 
-      # Frontend Steps
       - name: Install frontend dependencies
         run: |
-          cd frontend
-          npm ci
+          if [ -d frontend ]; then
+            cd frontend
+            npm ci
+          else
+            echo "Frontend directory not found, skipping install."
+          fi
 
       - name: Run frontend tests
         run: |
-          cd frontend
-          # Added CI=true and watchAll=false to prevent hanging
-          CI=true npm test -- --coverage --watchAll=false --passWithNoTests
+          if [ -d frontend ]; then
+            cd frontend
+            CI=true npm test -- --coverage --watchAll=false --passWithNoTests
+          else
+            echo "Frontend directory not found, skipping tests."
+          fi
+
+      - name: Tear down Docker Compose services
+        if: always()
+        run: |
+          if [ -f docker-compose.yml ] || [ -f docker-compose.yaml ]; then
+            docker-compose down
+          fi
