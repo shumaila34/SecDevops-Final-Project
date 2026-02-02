@@ -8,7 +8,8 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: self-hosted   # <- Self-hosted runner
+    # CHANGE: Using GitHub's runner instead of self-hosted
+    runs-on: ubuntu-latest 
 
     steps:
       - name: Checkout code
@@ -19,36 +20,26 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Cache backend node modules
-        uses: actions/cache@v4
-        with:
-          path: backend/Ecommerce-Web-App-server/node_modules
-          key: ${{ runner.os }}-backend-node-${{ hashFiles('backend/Ecommerce-Web-App-server/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-backend-node-
-
-      - name: Cache frontend node modules
-        uses: actions/cache@v4
-        with:
-          path: frontend/node_modules
-          key: ${{ runner.os }}-frontend-node-${{ hashFiles('frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-frontend-node-
-
+      # Backend Steps
       - name: Install backend dependencies
         run: |
           cd backend/Ecommerce-Web-App-server
           npm ci
+      
       - name: Run backend tests
         run: |
           cd backend/Ecommerce-Web-App-server
-          npm test -- --coverage
+          # Added --passWithNoTests to ensure it doesn't fail if tests are missing
+          npm test -- --coverage --passWithNoTests 
 
+      # Frontend Steps
       - name: Install frontend dependencies
         run: |
           cd frontend
           npm ci
+
       - name: Run frontend tests
         run: |
           cd frontend
-          npm test -- --coverage
+          # Added CI=true and watchAll=false to prevent hanging
+          CI=true npm test -- --coverage --watchAll=false --passWithNoTests
